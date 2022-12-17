@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <%- include('_styles') %>
+    <title>User Portal</title>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg bg-primary navbar-dark">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="/"
+          ><img
+            src="https://cdn-icons-png.flaticon.com/512/3468/3468568.png"
+            height="32"
+            width="32"
+            alt="Logo"
+          />
+          &nbsp;&nbsp;User Portal</a
+        >
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav me-auto mb-3 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link" href="/">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/voters">Voters List</a>
+            </li>
+            <% if(data.resultsPublished) { %>
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="/results"
+                >Results</a
+              >
+            </li>
+            <% } %>
+          </ul>
+          <form class="d-flex" role="search" action="/logout">
+            <input type="text" class="form-control me-2" id="timer" disabled />
+            <button class="btn btn-danger" type="submit">Logout</button>
+          </form>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="row">
+        <div class="col mt-2">
+          <% if(locals.success === false) { %>
+          <div class="mb-3">
+            <div class="alert alert-danger" role="alert">
+              ⚠ <%= locals.message %>
+            </div>
+          </div>
+          <% } %> <% if(locals.success === true && locals.showMessage === true)
+          { %>
+          <div class="mb-3">
+            <div class="alert alert-success" role="alert">
+              ✓ <%= locals.message %>
+            </div>
+          </div>
+          <% } %>
+
+          <div class="mb-3">
+            <div
+              class="alert alert-danger"
+              role="alert"
+              id="error"
+              style="display: none"
+            ></div>
+          </div>
+
+          <div class="mb-3">
+            <div
+              class="alert alert-success"
+              role="alert"
+              id="success"
+              style="display: none"
+            ></div>
+          </div>
+
+          <form
+            action="http://localhost:8080/vote-candidate"
+            method="POST"
+            id="vote-form"
+          >
+            <div class="row">
+              <div class="col">
+                <h4>Total Registered voters: <%= data?.registeredVoters %></h4>
+                <h6>Votes Count: <%= data?.votesCount %></h6>
+                <hr />
+                <table class="table table-striped table-hover">
+                  <thead>
+                    <tr>
+                      <th scope="col">Nomination ID</th>
+                      <th scope="col">Candidate Image</th>
+                      <th scope="col">Candidate Name</th>
+                      <th scope="col">Number of Votes</th>
+                      <th scope="col">You Voted</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbody">
+                    <% for (let candidate of data?.candidates) { %>
+                    <tr>
+                      <th scope="row"><%= candidate.nominationID %></th>
+                      <td>
+                        <img
+                          src="<%= candidate.candidateImageURL %>"
+                          alt="<%= candidate.candidateName %>'s Image URL"
+                          height="32"
+                          width="32"
+                        />
+                      </td>
+                      <td><%= candidate.candidateName %></td>
+                      <td><%= candidate.votes %></td>
+                      <td>
+                        <% if(data?.candidateVotedByUser ===
+                        candidate.nominationID) { %>
+                        <img
+                          src="https://cdn-icons-png.flaticon.com/512/190/190411.png"
+                          width="24"
+                          height="24"
+                        />
+                        <% } else { %>
+                        <img
+                          src="https://cdn-icons-png.flaticon.com/512/6711/6711656.png"
+                          width="24"
+                          height="24"
+                        />
+                        <% } %>
+                      </td>
+                    </tr>
+                    <% } %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <%- include('_scripts') %>
+
+    <script src="/public/time.js"></script>
+
+    <script>
+      const firstRow = document.getElementsByTagName("tr")[1];
+
+      firstRow.classList.add("table-success");
+    </script>
+  </body>
+</html>

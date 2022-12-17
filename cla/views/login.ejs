@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <%- include('_styles') %>
+    <title>User Portal</title>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg bg-primary navbar-dark">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="/"
+          ><img
+            src="https://cdn-icons-png.flaticon.com/512/3468/3468568.png"
+            height="32"
+            width="32"
+            alt="Logo"
+          />
+          &nbsp;&nbsp;User Portal</a
+        >
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav me-auto mb-3 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="/login"
+                >Login</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/signup">Sign Up</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="row d-flex justify-content-center">
+        <div class="col-6 mt-4">
+          <% if(locals.success === false) { %>
+          <div class="mb-3">
+            <div class="alert alert-danger" role="alert">
+              ⚠ <%= locals.message %>
+            </div>
+          </div>
+          <% } %> <% if(locals.success === true) { %>
+          <div class="mb-3">
+            <div class="alert alert-success" role="alert">
+              ✓ <%= locals.message %>
+            </div>
+          </div>
+          <% } %>
+
+          <h1 class="text-center">Login</h1>
+
+          <form action="/login" method="POST">
+            <div class="mb-3">
+              <label for="epic">EPIC Number</label>
+              <input type="text" class="form-control" name="epic" id="epic" />
+            </div>
+
+            <div class="mb-3">
+              <label for="password">Password</label>
+              <input
+                type="password"
+                class="form-control"
+                name="password"
+                id="password"
+                autocomplete="off"
+              />
+            </div>
+
+            <div class="mb-3">
+              <button
+                class="btn btn-primary form-control mb-3"
+                id="loginBtn"
+                type="submit"
+              >
+                Login
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <%- include('_scripts') %>
+
+    <script>
+      const epic = document.getElementById("epic");
+      const password = document.getElementById("password");
+      const loginBtn = document.getElementById("loginBtn");
+
+      loginBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+
+        const credentials = JSON.stringify({
+          epic: epic.value,
+          password: password.value,
+        });
+
+        const cipher = encrypt(
+          credentials,
+          localStorage.getItem("session_key")
+        );
+        const payload = encodeBase64(cipher);
+        console.log("LOGIN_PAYLOAD_PLAINTEXT", credentials);
+        console.log("LOGIN_PAYLOAD", payload);
+
+        const res = await fetch("http://localhost:8000/login", {
+          method: "POST",
+          body: JSON.stringify({
+            payload,
+          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        const data = await res.json();
+        console.log(data);
+
+        if (data.success) {
+          toastr.success(data.message);
+          location.reload();
+        } else {
+          toastr.error(data.message);
+        }
+      });
+    </script>
+  </body>
+</html>

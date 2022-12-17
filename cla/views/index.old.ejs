@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <%- include('_styles') %>
+    <title>User Portal</title>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg bg-primary navbar-dark">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="/"
+          ><img
+            src="https://cdn-icons-png.flaticon.com/512/3468/3468568.png"
+            height="32"
+            width="32"
+            alt="Logo"
+          />
+          &nbsp;&nbsp;User Portal</a
+        >
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav me-auto mb-3 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="/">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/voters">Voters List</a>
+            </li>
+          </ul>
+          <form class="d-flex" role="search" action="/logout">
+            <input
+              type="text"
+              class="form-control me-2"
+              value="Name: <%= data?.user?.name %>, EPIC: <%= data?.user?.epic %>"
+              disabled
+            />
+            <button class="btn btn-danger" type="submit">Logout</button>
+          </form>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="row">
+        <div class="col mt-2">
+          <% if(locals.success === false) { %>
+          <div class="mb-3">
+            <div class="alert alert-danger" role="alert">
+              ⚠ <%= locals.message %>
+            </div>
+          </div>
+          <% } %> <% if(locals.success === true && locals.showMessage === true)
+          { %>
+          <div class="mb-3">
+            <div class="alert alert-success" role="alert">
+              ✓ <%= locals.message %>
+            </div>
+          </div>
+          <% } %>
+
+          <div class="mb-3">
+            <div
+              class="alert alert-danger"
+              role="alert"
+              id="error"
+              style="display: none"
+            ></div>
+          </div>
+
+          <div class="mb-3">
+            <div
+              class="alert alert-success"
+              role="alert"
+              id="success"
+              style="display: none"
+            ></div>
+          </div>
+
+          <form
+            action="http://localhost:8080/vote-candidate"
+            method="POST"
+            id="vote-form"
+          >
+            <div class="row">
+              <div class="col col-8">
+                <h4>Choose your Candidate</h4>
+                <div>
+                  <table class="table table-striped table-hover">
+                    <thead>
+                      <tr>
+                        <th scope="col">Nomination ID</th>
+                        <th scope="col">Candidate Image</th>
+                        <th scope="col">Candidate Name</th>
+                        <th scope="col">Vote</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tbody">
+                      <% for (let candidate of data?.candidates) { %>
+                      <tr>
+                        <th scope="row"><%= candidate.nominationID %></th>
+                        <td>
+                          <img
+                            src="<%= candidate?.candidateImageURL %>"
+                            alt="<%= candidate?.candidateName %>'s Image"
+                            height="32"
+                            width="32"
+                          />
+                        </td>
+                        <td>
+                          <label
+                            class="form-check-label"
+                            for="<%= candidate.nominationID %>"
+                          >
+                            <%= candidate?.candidateName %>
+                          </label>
+                        </td>
+                        <td>
+                          <input
+                            class="form-check-input"
+                            type="radio"
+                            name="nominationID"
+                            id="<%= candidate.nominationID %>"
+                            value="<%= candidate.nominationID %>"
+                          />
+                        </td>
+                      </tr>
+                      <% } %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="col col-4 card p-3">
+                <h4>Your Credentials</h4>
+                <div class="mt-3 mb-3">
+                  <label for="epic"><strong>EPIC</strong></label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    name="epic"
+                    id="epic"
+                    value="<%= data?.user.epic %>"
+                    readonly
+                    disabled
+                  />
+                </div>
+                <div class="mb-3">
+                  <label for="validationNumber"
+                    ><strong>Validation Number</strong></label
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    name="validationNumber"
+                    id="validationNumber"
+                    value="<%= data?.validationNumber %>"
+                    readonly
+                  />
+                </div>
+
+                <div class="mb-3">
+                  <button
+                    type="submit"
+                    class="btn btn-primary form-control mb-3"
+                    id="voteBtn"
+                  >
+                    Vote Now
+                  </button>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <%- include('_scripts') %>
+
+    
+    <script>
+      let cipher = '<%- JSON.stringify(data?.payload) %>';
+      cipher = cipher.substr(1, cipher.length - 2);
+      const data = JSON.parse(
+        CryptoJS.AES.decrypt(atob(cipher), localStorage.getItem('session_key')).toString(CryptoJS.enc.Utf8)
+        );
+      console.log("DECRYPTED", data);
+
+      const tbody = document.getElementById('tbody');
+      for (let candidate of data?.candidates) {
+        const html = `<tr>
+                        <th scope="row">${candidate.nominationID}</th>
+                        <td>
+                          <img
+                            src=${candidate?.candidateImageURL}
+                            alt=${candidate?.candidateName}'s Image"
+                            height="32"
+                            width="32"
+                          />
+                        </td>
+                        <td>
+                          <label
+                            class="form-check-label"
+                            for=${candidate.nominationID}
+                          >
+                          ${candidate?.candidateName}
+                          </label>
+                        </td>
+                        <td>
+                          <input
+                            class="form-check-input"
+                            type="radio"
+                            name="nominationID"
+                            id=${candidate.nominationID}
+                            value=${candidate.nominationID}
+                          />
+                        </td>
+                      </tr>`;
+        tbody.innerHTML += html;
+      }
+    </script>
+
+    <script>
+      const epic = document.getElementById("epic");
+      const validationNumber = document.getElementById("validationNumber");
+      const voteBtn = document.getElementById("voteBtn");
+
+      voteBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+
+        const credentials = JSON.stringify({
+          epic: epic.value,
+          validationNumber: validationNumber.value,
+        });
+
+        const radios = [...document.getElementsByName("nominationID")];
+          const selectedRadio = radios.filter(
+            (radio) => radio.checked === true
+          );
+
+          if (selectedRadio.length === 0) {
+            toggleAlert(
+              true,
+              "error",
+              "Please select a candidate to vote for."
+            );
+            return;
+          }
+
+          const nominationID = selectedRadio[0].getAttribute("id");
+
+        const cipher = encrypt(credentials, sessionKey);
+        const payload = encodeBase64(cipher);
+
+        const res = await fetch("http://localhost:8080/vote", {
+          method: "POST",
+          credentials: "include",
+          body: JSON.stringify({
+            payload,
+          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          toastr.success(data.message);
+          location.reload();
+        } else {
+          toastr.error(data.message);
+        }
+      });
+    </script>
+
+</html>
